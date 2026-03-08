@@ -2,50 +2,34 @@ import streamlit as st
 import requests
 import google.generativeai as genai
 
-# --- CONFIGURATION ---
+# Keys
 GEMINI_API_KEY = "AIzaSyDvGtzyZ9aB_1dVb5U66TMlzo1fVjXDGHI"
 PEXELS_API_KEY = "LqLYmxGJcYmvkNP3nP13WWSIVuAzGwHulanmPOGnWdkyNA9cGK10Wn8V"
 
-# AI Setup - Version mismatch fix
+# AI Setup
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    # Sirf 'gemini-1.5-flash' likhein, '-latest' ya 'v1beta' nahi
+    # Gemini 3 Flash (1.5 Flash) is designed for speed and reliability
     model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
     st.error(f"Setup Error: {e}")
 
 st.title("🎥 YT Automation Video Finder")
-
-user_script = st.text_area("Apni Script Likhein:", placeholder="Example: A futuristic city in 2050...")
+user_script = st.text_area("Script Likhein:")
 
 if st.button("Video Clips Dhoondo!"):
     if user_script:
-        with st.spinner('AI analysis kar raha hai...'):
+        with st.spinner('AI dhoond raha hai...'):
             try:
-                # Gemini se keywords mangna
-                prompt = f"Extract 3 visual keywords for stock footage from this script: {user_script}. Return only keywords separated by commas."
-                response = model.generate_content(prompt)
+                # Prompting the model for visual keywords
+                response = model.generate_content(f"Keywords for: {user_script}. 3 words only, comma separated.")
+                keywords = response.text.split(',')
                 
-                if response and response.text:
-                    keywords = response.text.split(',')
-                    st.success(f"🔍 AI Keywords: {response.text}")
-
-                    # Pexels API Call
-                    headers = {"Authorization": PEXELS_API_KEY}
-                    for kw in keywords:
-                        kw = kw.strip()
-                        url = f"https://api.pexels.com/videos/search?query={kw}&per_page=1"
-                        res = requests.get(url, headers=headers).json()
-                        
-                        if 'videos' in res and len(res['videos']) > 0:
-                            v_url = res['videos'][0]['video_files'][0]['link']
-                            st.write(f"🎥 Clip for: **{kw}**")
-                            st.video(v_url)
-                        else:
-                            st.info(f"'{kw}' ke liye video nahi mili.")
-                else:
-                    st.error("AI model busy hai, dubara try karein.")
+                headers = {"Authorization": PEXELS_API_KEY}
+                for kw in keywords:
+                    url = f"https://api.pexels.com/videos/search?query={kw.strip()}&per_page=1"
+                    res = requests.get(url, headers=headers).json()
+                    if 'videos' in res and len(res['videos']) > 0:
+                        st.video(res['videos'][0]['video_files'][0]['link'])
             except Exception as e:
                 st.error(f"⚠️ Error: {e}")
-    else:
-        st.warning("Pehle script likhein!")

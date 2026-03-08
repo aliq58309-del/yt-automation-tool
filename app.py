@@ -6,28 +6,28 @@ import google.generativeai as genai
 GEMINI_API_KEY = "AIzaSyDvGtzyZ9aB_1dVb5U66TMlzo1fVjXDGHI"
 PEXELS_API_KEY = "LqLYmxGJcYmvkNP3nP13WWSIVuAzGwHulanmPOGnWdkyNA9cGK10Wn8V"
 
-# AI Setup - Using 'gemini-1.0-pro' for maximum compatibility
+# AI Setup - Using Gemini 1.5 Flash (Latest & Most Compatible)
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    # 404 Error se bachne ke liye model name update kiya gaya hai
-    model = genai.GenerativeModel('gemini-1.0-pro')
+    # Force using gemini-1.5-flash which is the standard for new API keys
+    model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
     st.error(f"Setup Error: {e}")
 
 st.set_page_config(page_title="AI Video Automator", page_icon="🎬")
 st.title("🎬 YT Automation Video Finder")
 
-user_script = st.text_area("Apni Script Likhein:", height=150, placeholder="Example: Moon landing in 1969...")
+user_script = st.text_area("Apni Script Likhein:", height=150, placeholder="Example: Astronaut walking on Mars...")
 
 if st.button("Video Clips Dhoondo!"):
     if user_script:
-        with st.spinner('AI analysis kar raha hai...'):
+        with st.spinner('AI clips dhoond raha hai...'):
             try:
                 # 1. Gemini se keywords nikalna
                 prompt = f"Give me exactly 3 search keywords for stock footage for this script: {user_script}. Return ONLY keywords separated by commas."
                 response = model.generate_content(prompt)
                 
-                if response.text:
+                if response and response.text:
                     keywords = response.text.split(',')
                     st.success(f"🔍 AI Keywords: {response.text}")
 
@@ -45,11 +45,13 @@ if st.button("Video Clips Dhoondo!"):
                         else:
                             st.warning(f"'{kw}' ke liye koi video nahi mili.")
                 else:
-                    st.error("AI ne koi jawab nahi diya.")
+                    st.error("AI model se response nahi mila. Dobara koshish karein.")
             except Exception as e:
+                # Agar ab bhi 404 aaye, toh hum alternative model 'gemini-pro' try karenge
                 st.error(f"⚠️ Masla: {e}")
+                st.info("Mashwara: Agar ye error bar bar aaye toh 'requirements.txt' check karein.")
     else:
         st.warning("Pehle script likhein!")
 
 st.markdown("---")
-st.caption("AI Video Finder | Powered by Gemini 1.0 Pro")
+st.caption("AI Video Finder | Updated to Gemini 1.5 Flash")

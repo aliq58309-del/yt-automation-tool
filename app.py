@@ -6,24 +6,25 @@ import google.generativeai as genai
 GEMINI_API_KEY = "AIzaSyDvGtzyZ9aB_1dVb5U66TMlzo1fVjXDGHI"
 PEXELS_API_KEY = "LqLYmxGJcYmvkNP3nP13WWSIVuAzGwHulanmPOGnWdkyNA9cGK10Wn8V"
 
-# AI Setup - Using 'gemini-pro' which is most stable
+# AI Setup - Using 'gemini-1.0-pro' for maximum compatibility
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-pro')
+    # 404 Error se bachne ke liye model name update kiya gaya hai
+    model = genai.GenerativeModel('gemini-1.0-pro')
 except Exception as e:
     st.error(f"Setup Error: {e}")
 
 st.set_page_config(page_title="AI Video Automator", page_icon="🎬")
 st.title("🎬 YT Automation Video Finder")
 
-user_script = st.text_area("Script Likhein:", height=150)
+user_script = st.text_area("Apni Script Likhein:", height=150, placeholder="Example: Moon landing in 1969...")
 
 if st.button("Video Clips Dhoondo!"):
     if user_script:
-        with st.spinner('AI clips dhoond raha hai...'):
+        with st.spinner('AI analysis kar raha hai...'):
             try:
                 # 1. Gemini se keywords nikalna
-                prompt = f"Give me exactly 3 search keywords for stock footage for this script: {user_script}. Only keywords, comma separated."
+                prompt = f"Give me exactly 3 search keywords for stock footage for this script: {user_script}. Return ONLY keywords separated by commas."
                 response = model.generate_content(prompt)
                 
                 if response.text:
@@ -43,7 +44,12 @@ if st.button("Video Clips Dhoondo!"):
                             st.video(video_url)
                         else:
                             st.warning(f"'{kw}' ke liye koi video nahi mili.")
+                else:
+                    st.error("AI ne koi jawab nahi diya.")
             except Exception as e:
                 st.error(f"⚠️ Masla: {e}")
     else:
         st.warning("Pehle script likhein!")
+
+st.markdown("---")
+st.caption("AI Video Finder | Powered by Gemini 1.0 Pro")
